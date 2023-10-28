@@ -70,41 +70,63 @@ module grid_block(num_x=1, num_y=1, num_z=2, magnet_diameter=6.5, screw_depth=6,
     }
   }
 }
-
-
 module pad_grid(num_x, num_y, half_pitch=false) {
+  frac_x = num_x%1;
+  frac_y = num_y%1;
+  whole_x = num_x - frac_x;
+  whole_y = num_y - frac_y;
   // if num_x (or num_y) is less than 1 (or less than 0.5 if half_pitch is enabled) then round over the far side
-  cut_far_x = (num_x < 1 && !half_pitch) || (num_x < 0.5);
-  cut_far_y = (num_y < 1 && !half_pitch) || (num_y < 0.5);
   
   if (half_pitch) {
-    gridcopy(ceil(num_x), ceil(num_y)) intersection() {
+    odd_x = frac_x >= .5;
+    odd_y = frac_y >= .5;
+    gridcopy(whole_x,whole_y) intersection() {
       pad_halfsize();
-      if (cut_far_x) {
-        translate([gridfinity_pitch*(-0.5+num_x), 0, 0]) pad_halfsize();
-      }
-      if (cut_far_y) {
-        translate([0, gridfinity_pitch*(-0.5+num_y), 0]) pad_halfsize();
-      }
-      if (cut_far_x && cut_far_y) {
-        // without this the far corner would be rectangular
-        translate([gridfinity_pitch*(-0.5+num_x), gridfinity_pitch*(-0.5+num_y), 0]) pad_halfsize();
-      }
+    }
+    if(odd_x){
+       translate([gridfinity_pitch*whole_x,0,0])
+       halfgridcopy(1,whole_y*2) pad_oversize(.5,.5,margins=1) render();
+       count_x = count_x + .5;
+    }
+    if(odd_y){
+        translate([0,gridfinity_pitch*whole_y,0])
+        halfgridcopy(whole_x*2,1) pad_oversize(.5,.5,margins=1) render();
+        echo(count_y);
+    }
+    if (odd_x && odd_y){
+        translate([gridfinity_pitch*whole_x, gridfinity_pitch*whole_y,0])
+        pad_oversize(.5,.5,margins=1) render(); 
+        
+    }
+    if(frac_x > 0){
+      translate([gridfinity_pitch*(whole_x + (odd_x?.5:0)),0,0])
+      render() halfgridcopy(1,(whole_y + (odd_y?.5:0))*2) pad_oversize(frac_x + (odd_y?-.5:0),.5,margins=1);
+    }
+    if(frac_y > 0){
+     translate([0,gridfinity_pitch*(whole_y + (odd_y?.5:0)),0])
+     render() halfgridcopy((whole_x + (odd_x?.5:0))*2,1) pad_oversize(.5,frac_y + (odd_y?-.5:0),margins=1);
+    }
+    if(frac_y > 0 && frac_x > 0){
+     echo(whole_x + (odd_x?.5:0))
+     translate([gridfinity_pitch*(whole_x + (odd_x?.5:0)),gridfinity_pitch*(whole_y + (odd_y?.5:0)),0])
+     render() pad_oversize(frac_x + (odd_x?-.5:0),frac_y + (odd_y?-.5:0),margins=1);
     }
   }
   else {
-    gridcopy(ceil(num_x), ceil(num_y)) intersection() {
+    gridcopy(whole_x, whole_y) intersection() {
       pad_oversize();
-      if (cut_far_x) {
-        translate([gridfinity_pitch*(-1+num_x), 0, 0]) pad_oversize();
-      }
-      if (cut_far_y) {
-        translate([0, gridfinity_pitch*(-1+num_y), 0]) pad_oversize();
-      }
-      if (cut_far_x && cut_far_y) {
-        // without this the far corner would be rectangular
-        translate([gridfinity_pitch*(-1+num_x), gridfinity_pitch*(-1+num_y), 0]) pad_oversize();
-      }
+    }
+    if(frac_x > 0){
+      translate([gridfinity_pitch*whole_x,0,0])
+      render() gridcopy(1,whole_y) pad_oversize(frac_x,1,margins=1);
+    }
+    if(frac_y > 0){
+       translate([0,gridfinity_pitch*whole_y,0])
+       render() gridcopy(whole_x,1) pad_oversize(1,frac_y,margins=1);
+    }
+    if(frac_y > 0 && frac_x > 0){
+       translate([gridfinity_pitch*whole_x,gridfinity_pitch*whole_y,0])
+       render() pad_oversize(frac_x,frac_y,margins=1);
     }
   }
 }
@@ -203,6 +225,10 @@ module cornercopy(r, num_x=1, num_y=1) {
 // make repeated copies of something(s) at the gridfinity spacing of 42mm
 module gridcopy(num_x, num_y) {
   for (xi=[1:num_x]) for (yi=[1:num_y]) translate([gridfinity_pitch*(xi-1), gridfinity_pitch*(yi-1), 0]) children();
+}
+
+module halfgridcopy(num_x, num_y) {
+  for (xi=[1:num_x]) for (yi=[1:num_y]) translate([gridfinity_pitch/2*(xi-1), gridfinity_pitch/2*(yi-1), 0]) children();
 }
 
 
