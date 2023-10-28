@@ -80,8 +80,10 @@ module pad_grid(num_x, num_y, half_pitch=false) {
   if (half_pitch) {
     odd_x = frac_x >= .5;
     odd_y = frac_y >= .5;
-    gridcopy(whole_x,whole_y) intersection() {
-      pad_halfsize();
+    if( whole_x > 0 && whole_y > 0) {
+      gridcopy(whole_x,whole_y) intersection() {
+        pad_halfsize();
+      }
     }
     if(odd_x){
        translate([gridfinity_pitch*whole_x,0,0])
@@ -113,8 +115,10 @@ module pad_grid(num_x, num_y, half_pitch=false) {
     }
   }
   else {
-    gridcopy(whole_x, whole_y) intersection() {
-      pad_oversize();
+    if( whole_x > 0 && whole_y > 0) {
+      gridcopy(whole_x,whole_y) intersection() {
+        pad_halfsize();
+      }
     }
     if(frac_x > 0){
       translate([gridfinity_pitch*whole_x,0,0])

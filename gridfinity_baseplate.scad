@@ -1,8 +1,8 @@
 // include instead of use, so we get the pitch
 include <gridfinity_modules.scad>
 
-xsize = 2.2;
-ysize = 2.2;
+xsize = 6;
+ysize = 0.94;
 weighted = false;
 lid = false;
 
@@ -86,7 +86,9 @@ module frame_plain(num_x, num_y, extra_down=0, trim=0) {
     hull() cornercopy(corner_position, num_x, num_y) 
     translate([0, 0, -extra_down]) cylinder(r=corner_radius, h=ht+extra_down, $fn=44);
     translate([0, 0, trim ? 0 : -0.01])
-    render() gridcopy(xwhole, ywhole) pad_oversize(margins=1);
+    if(xwhole > 0 && ywhole > 0){
+        render() gridcopy(xwhole, ywhole) pad_oversize(margins=1);
+    }
     if(xfrac > 0){
         translate([gridfinity_pitch*xwhole,0,trim ? 0 : -0.01])
         render() gridcopy(1,ywhole) pad_oversize(xfrac,1,margins=1);
