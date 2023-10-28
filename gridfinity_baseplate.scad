@@ -1,10 +1,11 @@
 // include instead of use, so we get the pitch
 include <gridfinity_modules.scad>
 
-xsize = 5;
-ysize = 3;
+xsize = 2.2;
+ysize = 2.2;
 weighted = false;
 lid = false;
+
 
 if (lid) {
   base_lid(xsize, ysize);
@@ -37,11 +38,17 @@ module base_lid(num_x, num_y) {
 
 
 module weighted_baseplate(num_x, num_y) {
+  
   magnet_od = 6.5;
   magnet_position = min(gridfinity_pitch/2-8, gridfinity_pitch/2-4-magnet_od/2);
   magnet_thickness = 2.4;
   eps = 0.1;
   
+  xfrac = xsize%1;
+  xwhole = xsize - xfrac;
+  yfrac = ysize%1;
+  ywhole = ysize - yfrac;
+    
   difference() {
     frame_plain(num_x, num_y, 6.4);
     
@@ -70,10 +77,27 @@ module frame_plain(num_x, num_y, extra_down=0, trim=0) {
   ht = extra_down > 0 ? 4.4 : 5;
   corner_radius = 3.75;
   corner_position = gridfinity_pitch/2-corner_radius-trim;
+  xfrac = xsize%1;
+  xwhole = xsize - xfrac;
+  yfrac = ysize%1;
+  ywhole = ysize - yfrac;
+    
   difference() {
     hull() cornercopy(corner_position, num_x, num_y) 
     translate([0, 0, -extra_down]) cylinder(r=corner_radius, h=ht+extra_down, $fn=44);
-    translate([0, 0, trim ? 0 : -0.01]) 
-    render() gridcopy(num_x, num_y) pad_oversize(margins=1);
+    translate([0, 0, trim ? 0 : -0.01])
+    render() gridcopy(xwhole, ywhole) pad_oversize(margins=1);
+    if(xfrac > 0){
+        translate([gridfinity_pitch*xwhole,0,trim ? 0 : -0.01])
+        render() gridcopy(1,ywhole) pad_oversize(xfrac,1,margins=1);
+    }
+    if(yfrac > 0){
+        translate([0,gridfinity_pitch*ywhole,trim ? 0 : -0.01])
+        render() gridcopy(xwhole,1) pad_oversize(1,yfrac,margins=1);
+    }
+    if(yfrac > 0 && xfrac > 0){
+        translate([gridfinity_pitch*xwhole,gridfinity_pitch*ywhole,trim ? 0 : -0.01])
+        render() pad_oversize(xfrac,yfrac,margins=1);
+    }
   }
 }
